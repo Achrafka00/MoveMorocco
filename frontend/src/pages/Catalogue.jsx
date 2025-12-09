@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Car, Tag, User, Users, Star, MessageSquare } from 'lucide-react';
 
 const Catalogue = () => {
   const [vehicles, setVehicles] = useState([]);
@@ -48,6 +49,14 @@ const Catalogue = () => {
     navigate('/booking', { state: { selectedVehicle: vehicle } });
   };
 
+  // Helper to construct full image URL
+  const getImageUrl = (path) => {
+    if (!path) return null;
+    if (path.startsWith('http')) return path;
+    const cleanPath = path.replace('public/', '');
+    return `http://127.0.0.1:8000${cleanPath.startsWith('/') ? '' : '/'}${cleanPath}`;
+  };
+
   const renderStars = (rating) => {
     const stars = [];
     for (let i = 1; i <= 5; i++) {
@@ -63,7 +72,9 @@ const Catalogue = () => {
   return (
     <div className="catalogue-page section">
       <div className="container">
-        <h1 className="text-center mb-4">🚗 Our Fleet</h1>
+        <h1 className="text-center mb-4 flex items-center justify-center gap-3">
+          <Car size={32} className="text-primary-600" /> Our Fleet
+        </h1>
         <p className="text-center subtitle mb-8">
           Choose from our premium selection of vehicles
         </p>
@@ -95,7 +106,7 @@ const Catalogue = () => {
             {vehicles.map((vehicle) => (
               <div key={vehicle.id} className="vehicle-card">
                 <div className="vehicle-image">
-                  <img src={vehicle.image_url} alt={vehicle.name} />
+                  <img src={getImageUrl(vehicle.image_url)} alt={vehicle.name} />
                   <div className={`category-badge category-${vehicle.category.name.toLowerCase()}`}>
                     {vehicle.category.name}
                   </div>
@@ -109,7 +120,7 @@ const Catalogue = () => {
                   {vehicle.partner && (
                     <div className="driver-info">
                       <img
-                        src={vehicle.partner.avatar_url || 'https://i.pravatar.cc/150?img=1'}
+                        src={getImageUrl(vehicle.partner.avatar_url) || 'https://i.pravatar.cc/150?img=1'}
                         alt={vehicle.partner.name}
                         className="driver-avatar"
                       />
@@ -125,11 +136,11 @@ const Catalogue = () => {
 
                   <div className="vehicle-info">
                     <div className="info-item">
-                      <span className="icon">👥</span>
+                      <span className="icon"><Users size={18} /></span>
                       <span>{vehicle.capacity} passengers</span>
                     </div>
                     <div className="info-item">
-                      <span className="icon">💰</span>
+                      <span className="icon"><Tag size={18} /></span>
                       <span>{vehicle.price_per_km} MAD/km</span>
                     </div>
                   </div>

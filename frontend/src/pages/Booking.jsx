@@ -2,11 +2,35 @@ import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useToast } from '../context/ToastContext';
 import WhatsAppButton from '../components/WhatsAppButton';
+import {
+    Calendar,
+    Clock,
+    MapPin,
+    Users,
+    CheckCircle,
+    Car,
+    ArrowRight,
+    ArrowLeft,
+    User,
+    Phone,
+    Mail,
+    MessageSquare,
+    Wifi,
+    Wind
+} from 'lucide-react';
 
 const Booking = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const toast = useToast();
+
+    // Helper to construct full image URL
+    const getImageUrl = (path) => {
+        if (!path) return null;
+        if (path.startsWith('http')) return path;
+        const cleanPath = path.replace('public/', '');
+        return `http://127.0.0.1:8000${cleanPath.startsWith('/') ? '' : '/'}${cleanPath}`;
+    };
 
     // Get data from price calculator if available
     const calculatorData = location.state || {};
@@ -142,7 +166,7 @@ const Booking = () => {
 
             {submitted ? (
                 <div className="booking-success-card">
-                    <div className="success-icon">✅</div>
+                    <div className="success-icon"><CheckCircle size={64} className="text-success-600 inline-block" /></div>
                     <h2>Booking Request Received!</h2>
                     <p>Thank you, <strong>{formData.full_name}</strong>.</p>
                     <p>We will review your request for a trip from <strong>{formData.pickup_location}</strong> to <strong>{formData.dropoff_location}</strong> on <strong>{formData.pickup_date}</strong> and contact you shortly.</p>
@@ -261,7 +285,7 @@ const Booking = () => {
                                                 <div className="vehicle-image-wrapper">
                                                     {/* Use a reliable placeholder if image_url is missing or broken */}
                                                     <img
-                                                        src={vehicle.image_url || 'https://placehold.co/600x400?text=No+Image'}
+                                                        src={getImageUrl(vehicle.image_url) || 'https://placehold.co/600x400?text=No+Image'}
                                                         alt={vehicle.name}
                                                         onError={(e) => { e.target.src = 'https://placehold.co/600x400?text=Image+Unavailable'; }}
                                                     />
@@ -270,7 +294,7 @@ const Booking = () => {
                                                     </div>
                                                     {formData.vehicle_id === vehicle.id && (
                                                         <div className="selected-overlay">
-                                                            <span className="check-icon">✓</span>
+                                                            <div className="check-icon"><CheckCircle size={24} /></div>
                                                         </div>
                                                     )}
                                                 </div>
@@ -281,9 +305,9 @@ const Booking = () => {
                                                     </div>
                                                     <p className="vehicle-sub">{vehicle.model} ({vehicle.year})</p>
                                                     <div className="vehicle-features">
-                                                        <span>👤 {vehicle.capacity} Seats</span>
-                                                        <span>❄️ A/C</span>
-                                                        <span>🔋 Wifi</span>
+                                                        <span className="flex items-center gap-1"><Users size={14} /> {vehicle.capacity} Seats</span>
+                                                        <span className="flex items-center gap-1"><Wind size={14} /> A/C</span>
+                                                        <span className="flex items-center gap-1"><Wifi size={14} /> Wifi</span>
                                                     </div>
                                                 </div>
                                             </div>
@@ -291,9 +315,9 @@ const Booking = () => {
                                     )}
                                 </div>
                                 <div className="step-actions">
-                                    <button className="btn btn-secondary" onClick={prevStep}>← Back</button>
+                                    <button className="btn btn-secondary" onClick={prevStep}><ArrowLeft size={16} /> Back</button>
                                     <button className="btn btn-primary" onClick={nextStep} disabled={!formData.vehicle_id}>
-                                        Enter Contact Details →
+                                        Enter Contact Details <ArrowRight size={16} />
                                     </button>
                                 </div>
                             </div>
@@ -350,9 +374,9 @@ const Booking = () => {
                                     />
                                 </div>
                                 <div className="step-actions">
-                                    <button className="btn btn-secondary" onClick={prevStep}>← Back</button>
+                                    <button className="btn btn-secondary" onClick={prevStep}><ArrowLeft size={16} /> Back</button>
                                     <button className="btn btn-primary" onClick={nextStep}>
-                                        Review Booking →
+                                        Review Booking <ArrowRight size={16} />
                                     </button>
                                 </div>
                             </div>
@@ -364,7 +388,7 @@ const Booking = () => {
 
                                 <div className="review-summary">
                                     <div className="review-item">
-                                        <h4>🗓 Trip</h4>
+                                        <h4 className="flex items-center gap-2"><Calendar size={16} /> Trip</h4>
                                         <p>{formData.pickup_date} at {formData.pickup_time || 'TBD'}</p>
                                         <p>{formData.pickup_location} ➝ {formData.dropoff_location}</p>
                                         <p>{formData.passengers} Passengers</p>
@@ -372,10 +396,10 @@ const Booking = () => {
 
                                     {formData.vehicle && (
                                         <div className="review-item highlight">
-                                            <h4>🚗 Vehicle</h4>
+                                            <h4 className="flex items-center gap-2"><Car size={16} /> Vehicle</h4>
                                             <div className="review-vehicle-flex">
                                                 <img
-                                                    src={formData.vehicle.image_url || 'https://placehold.co/100x60'}
+                                                    src={getImageUrl(formData.vehicle.image_url) || 'https://placehold.co/100x60'}
                                                     alt={formData.vehicle.name}
                                                     className="review-thumb"
                                                 />
@@ -388,7 +412,7 @@ const Booking = () => {
                                     )}
 
                                     <div className="review-item">
-                                        <h4>👤 Contact</h4>
+                                        <h4 className="flex items-center gap-2"><User size={16} /> Contact</h4>
                                         <p>{formData.full_name}</p>
                                         <p>{formData.phone_number}</p>
                                         <p>{formData.email}</p>
@@ -403,9 +427,9 @@ const Booking = () => {
                                 )}
 
                                 <div className="step-actions">
-                                    <button className="btn btn-secondary" onClick={prevStep} disabled={loading}>← Back</button>
+                                    <button className="btn btn-secondary" onClick={prevStep} disabled={loading}><ArrowLeft size={16} /> Back</button>
                                     <button className="btn btn-primary btn-lg" onClick={handleSubmit} disabled={loading}>
-                                        {loading ? 'Submitting...' : 'Confirm Booking ✓'}
+                                        {loading ? 'Submitting...' : <><CheckCircle size={18} /> Confirm Booking</>}
                                     </button>
                                 </div>
                             </div>

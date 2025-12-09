@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
+import { Car, CheckCircle, ArrowLeft, ArrowRight, User } from 'lucide-react';
 
 const PartnerRegister = () => {
     const [step, setStep] = useState(1);
@@ -81,7 +82,7 @@ const PartnerRegister = () => {
                 const data = await response.json();
 
                 if (response.ok) {
-                    toast.success('✅ Partner profile created! Waiting for approval.');
+                    toast.success('Partner profile created! Waiting for approval.');
                     navigate('/partner-dashboard');
                 } else {
                     toast.error(data.message || 'Partner profile creation failed');
@@ -103,7 +104,7 @@ const PartnerRegister = () => {
         <div className="partner-register-page">
             <div className="register-container">
                 <div className="register-card">
-                    <h1>🚗 Become a Partner</h1>
+                    <h1 className="flex items-center gap-2 mb-2"><Car size={32} className="text-primary-600" /> Become a Partner</h1>
                     <p className="subtitle">
                         {step === 1 ? 'Create your account' : 'Complete your profile'}
                     </p>
@@ -167,8 +168,8 @@ const PartnerRegister = () => {
                                 />
                             </div>
 
-                            <button type="submit" className="btn btn-primary btn-block">
-                                Next Step →
+                            <button type="submit" className="btn btn-primary btn-block flex items-center justify-center gap-2">
+                                Next Step <ArrowRight size={16} />
                             </button>
 
                             <div className="toggle-form">
@@ -257,10 +258,10 @@ const PartnerRegister = () => {
                             </div>
 
                             <div className="form-actions">
-                                <button type="button" onClick={() => setStep(1)} className="btn btn-secondary">
-                                    ← Back
+                                <button type="button" onClick={() => setStep(1)} className="btn btn-secondary flex items-center justify-center gap-2">
+                                    <ArrowLeft size={16} /> Back
                                 </button>
-                                <button type="submit" className="btn btn-primary" disabled={loading}>
+                                <button type="submit" className="btn btn-primary flex items-center justify-center gap-2" disabled={loading}>
                                     {loading ? 'Creating...' : 'Complete Registration'}
                                 </button>
                             </div>

@@ -1,6 +1,16 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import {
+  Car,
+  LayoutDashboard,
+  Settings,
+  LogOut,
+  Menu,
+  X,
+  User,
+  ChevronDown
+} from 'lucide-react';
 
 const Navbar = () => {
   const { user, logout } = useAuth();
@@ -18,7 +28,7 @@ const Navbar = () => {
     <nav className="navbar">
       <div className="navbar-container">
         <Link to="/" className="navbar-brand">
-          <span className="brand-icon">🚗</span>
+          <span className="brand-icon"><Car size={32} /></span>
           <span className="brand-text">MoveMorocco</span>
         </Link>
 
@@ -30,14 +40,14 @@ const Navbar = () => {
 
           {user?.role === 'admin' && (
             <Link to="/admin" className="nav-link admin-link">
-              <span className="link-icon">⚙️</span>
+              <span className="link-icon"><Settings size={18} /></span>
               Admin
             </Link>
           )}
 
           {user?.role === 'partner' && (
             <Link to="/partner-dashboard" className="nav-link partner-link">
-              <span className="link-icon">📊</span>
+              <span className="link-icon"><LayoutDashboard size={18} /></span>
               Dashboard
             </Link>
           )}
@@ -58,7 +68,7 @@ const Navbar = () => {
                   <span className="user-name">{user.name}</span>
                   <span className="user-role">{user.role}</span>
                 </div>
-                <span className="dropdown-arrow">▼</span>
+                <span className="dropdown-arrow"><ChevronDown size={14} /></span>
               </button>
 
               {userDropdownOpen && (
@@ -76,7 +86,7 @@ const Navbar = () => {
                         className="dropdown-item"
                         onClick={() => setUserDropdownOpen(false)}
                       >
-                        <span>📊</span> Dashboard
+                        <span><LayoutDashboard size={16} /></span> Dashboard
                       </Link>
                     )}
                     {user.role === 'admin' && (
@@ -85,12 +95,12 @@ const Navbar = () => {
                         className="dropdown-item"
                         onClick={() => setUserDropdownOpen(false)}
                       >
-                        <span>⚙️</span> Admin Panel
+                        <span><Settings size={16} /></span> Admin Panel
                       </Link>
                     )}
                     <div className="dropdown-divider"></div>
                     <button className="dropdown-item logout" onClick={handleLogout}>
-                      <span>🚪</span> Logout
+                      <span><LogOut size={16} /></span> Logout
                     </button>
                   </div>
                 </>
@@ -111,11 +121,7 @@ const Navbar = () => {
           className="mobile-menu-button"
           onClick={() => setMenuOpen(!menuOpen)}
         >
-          <span className={menuOpen ? 'hamburger open' : 'hamburger'}>
-            <span></span>
-            <span></span>
-            <span></span>
-          </span>
+          {menuOpen ? <X size={24} /> : <Menu size={24} />}
         </button>
       </div>
 
@@ -142,13 +148,13 @@ const Navbar = () => {
 
               {user?.role === 'admin' && (
                 <Link to="/admin" onClick={() => setMenuOpen(false)}>
-                  ⚙️ Admin Panel
+                  <Settings size={16} className="inline-icon" /> Admin Panel
                 </Link>
               )}
 
               {user?.role === 'partner' && (
                 <Link to="/partner-dashboard" onClick={() => setMenuOpen(false)}>
-                  📊 Partner Dashboard
+                  <LayoutDashboard size={16} className="inline-icon" /> Partner Dashboard
                 </Link>
               )}
             </div>

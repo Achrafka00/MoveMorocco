@@ -2,6 +2,21 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '../context/ToastContext';
+import {
+    Car,
+    Users,
+    User,
+    Settings,
+    Plus,
+    Upload,
+    CheckCircle,
+    Clock,
+    AlertTriangle,
+    Phone,
+    CreditCard,
+    FileText,
+    Tag
+} from 'lucide-react';
 
 const PartnerDashboard = () => {
     const [activeTab, setActiveTab] = useState('vehicles');
@@ -56,6 +71,14 @@ const PartnerDashboard = () => {
         } finally {
             setLoading(false);
         }
+    };
+
+    // Helper to construct full image URL
+    const getImageUrl = (path) => {
+        if (!path) return null;
+        if (path.startsWith('http')) return path;
+        const cleanPath = path.replace('public/', '');
+        return `http://127.0.0.1:8000${cleanPath.startsWith('/') ? '' : '/'}${cleanPath}`;
     };
 
     const handleFileUpload = async (file, url, fieldName = 'avatar') => {
@@ -204,7 +227,11 @@ const PartnerDashboard = () => {
                     <div className="partner-info">
                         <span>{partner?.type === 'company' ? partner?.company_name : partner?.name}</span>
                         <span className={`status-badge ${partner?.is_approved ? 'approved' : 'pending'}`}>
-                            {partner?.is_approved ? '✓ Approved' : '⏳ Pending Approval'}
+                            {partner?.is_approved ? (
+                                <><CheckCircle size={14} /> Approved</>
+                            ) : (
+                                <><Clock size={14} /> Pending Approval</>
+                            )}
                         </span>
                     </div>
                 </div>
@@ -213,7 +240,7 @@ const PartnerDashboard = () => {
             <div className="dashboard-content container">
                 {!partner?.is_approved && (
                     <div className="alert alert-warning">
-                        ⚠️ Your partner account is pending admin approval. You can add vehicles and drivers, but they won't be visible to clients until approved.
+                        <AlertTriangle className="inline-icon" size={20} /> Your partner account is pending admin approval. You can add vehicles and drivers, but they won't be visible to clients until approved.
                     </div>
                 )}
 
@@ -222,21 +249,21 @@ const PartnerDashboard = () => {
                         className={`tab ${activeTab === 'vehicles' ? 'active' : ''}`}
                         onClick={() => setActiveTab('vehicles')}
                     >
-                        🚗 Vehicles ({vehicles.length})
+                        <Car size={18} /> Vehicles ({vehicles.length})
                     </button>
                     {partner?.type === 'company' && (
                         <button
                             className={`tab ${activeTab === 'drivers' ? 'active' : ''}`}
                             onClick={() => setActiveTab('drivers')}
                         >
-                            👤 Drivers ({drivers.length})
+                            <Users size={18} /> Drivers ({drivers.length})
                         </button>
                     )}
                     <button
                         className={`tab ${activeTab === 'profile' ? 'active' : ''}`}
                         onClick={() => setActiveTab('profile')}
                     >
-                        ⚙️ Profile
+                        <Settings size={18} /> Profile
                     </button>
                 </div>
 
@@ -346,7 +373,7 @@ const PartnerDashboard = () => {
                                         {/* Image Gallery Preview */}
                                         <div className="vehicle-images-preview" style={{ height: '150px', background: '#f3f4f6', borderRadius: '8px', marginBottom: '1rem', overflow: 'hidden' }}>
                                             {vehicle.image_url ? (
-                                                <img src={vehicle.image_url} alt={vehicle.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                                <img src={getImageUrl(vehicle.image_url)} alt={vehicle.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                                             ) : (
                                                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#9ca3af' }}>No Image</div>
                                             )}
@@ -354,15 +381,15 @@ const PartnerDashboard = () => {
 
                                         <p>{vehicle.model} ({vehicle.year})</p>
                                         <div className="vehicle-details">
-                                            <span>👥 {vehicle.capacity} seats</span>
-                                            <span>💰 {vehicle.price_per_km} MAD/km</span>
+                                            <span><Users size={14} /> {vehicle.capacity} seats</span>
+                                            <span><Tag size={14} /> {vehicle.price_per_km} MAD/km</span>
                                         </div>
                                         {vehicle.driver && <p className="driver-info">Driver: {vehicle.driver.name}</p>}
 
                                         {/* Simple Upload Button for quick add */}
                                         <div style={{ marginTop: '1rem' }}>
                                             <label className="btn btn-sm btn-outline" style={{ cursor: 'pointer', fontSize: '0.8rem', padding: '0.25rem 0.5rem', border: '1px solid #ccc', borderRadius: '4px' }}>
-                                                📷 Add Photo
+                                                <Upload size={14} /> Add Photo
                                                 <input
                                                     type="file"
                                                     multiple
@@ -433,14 +460,14 @@ const PartnerDashboard = () => {
                                     <div key={driver.id} className="driver-card">
                                         <div className="driver-avatar" style={{ position: 'relative', cursor: 'pointer' }}>
                                             {driver.avatar_url ? (
-                                                <img src={driver.avatar_url} alt={driver.name} />
+                                                <img src={getImageUrl(driver.avatar_url)} alt={driver.name} />
                                             ) : (
-                                                <div className="avatar-placeholder">👤</div>
+                                                <div className="avatar-placeholder"><User size={24} /></div>
                                             )}
                                             <label htmlFor={`driver-upload-${driver.id}`} style={{
                                                 position: 'absolute', bottom: -5, right: -5, background: 'white', borderRadius: '50%', padding: '2px', boxShadow: '0 2px 4px rgba(0,0,0,0.2)', cursor: 'pointer'
                                             }}>
-                                                📷
+                                                <Upload size={12} />
                                             </label>
                                             <input
                                                 id={`driver-upload-${driver.id}`}
@@ -452,8 +479,8 @@ const PartnerDashboard = () => {
                                         </div>
                                         <div className="driver-details">
                                             <h4>{driver.name}</h4>
-                                            <p>📞 {driver.phone}</p>
-                                            {driver.license_number && <p>🪪 {driver.license_number}</p>}
+                                            <p><Phone size={14} /> {driver.phone}</p>
+                                            {driver.license_number && <p><CreditCard size={14} /> {driver.license_number}</p>}
                                             <span className={`status ${driver.is_active ? 'active' : 'inactive'}`}>
                                                 {driver.is_active ? 'Active' : 'Inactive'}
                                             </span>
@@ -479,9 +506,9 @@ const PartnerDashboard = () => {
                                         boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
                                     }}>
                                         {partner?.avatar_url ? (
-                                            <img src={partner.avatar_url} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                            <img src={getImageUrl(partner.avatar_url)} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                                         ) : (
-                                            <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2rem' }}>👤</div>
+                                            <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2rem' }}><User size={48} /></div>
                                         )}
                                     </div>
                                     <label htmlFor="avatar-upload" className="avatar-upload-btn" style={{
@@ -500,7 +527,7 @@ const PartnerDashboard = () => {
                                         fontSize: '1rem',
                                         border: '2px solid white'
                                     }}>
-                                        📷
+                                        <Upload size={16} />
                                     </label>
                                     <input
                                         id="avatar-upload"

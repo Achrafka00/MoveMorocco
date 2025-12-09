@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { MapPin, Car, DollarSign, Search, Calendar, CheckCircle } from 'lucide-react';
 
 const PriceCalculator = () => {
     const [cities, setCities] = useState([]);
@@ -98,13 +99,13 @@ const PriceCalculator = () => {
     return (
         <div className="price-calculator">
             <div className="calculator-card">
-                <h2>💰 Estimate Your Trip Cost</h2>
+                <h2 className="flex items-center justify-center gap-2"><DollarSign size={28} /> Estimate Your Trip Cost</h2>
                 <p className="subtitle">Get instant pricing for your journey across Morocco</p>
 
                 <div className="calculator-form">
                     <div className="form-row">
                         <div className="form-group">
-                            <label>📍 From</label>
+                            <label className="flex items-center gap-1"><MapPin size={16} /> From</label>
                             <select
                                 value={originCity}
                                 onChange={(e) => setOriginCity(e.target.value)}
@@ -118,7 +119,7 @@ const PriceCalculator = () => {
                         </div>
 
                         <div className="form-group">
-                            <label>📍 To</label>
+                            <label className="flex items-center gap-1"><MapPin size={16} /> To</label>
                             <select
                                 value={destinationCity}
                                 onChange={(e) => setDestinationCity(e.target.value)}
@@ -133,7 +134,7 @@ const PriceCalculator = () => {
                     </div>
 
                     <div className="form-group">
-                        <label>🚗 Vehicle Category (Optional)</label>
+                        <label className="flex items-center gap-1"><Car size={16} /> Vehicle Category (Optional)</label>
                         <select
                             value={categoryId}
                             onChange={(e) => setCategoryId(e.target.value)}
@@ -153,7 +154,7 @@ const PriceCalculator = () => {
                         className="btn btn-primary btn-calculate"
                         disabled={loading || !originCity || !destinationCity}
                     >
-                        {loading ? 'Calculating...' : '🔍 Calculate Price'}
+                        {loading ? 'Calculating...' : <><Search size={18} /> Calculate Price</>}
                     </button>
 
                     {error && <div className="error-message">{error}</div>}
@@ -189,8 +190,8 @@ const PriceCalculator = () => {
                                     <span className="value price">{price.total_price} MAD</span>
                                 </div>
                             </div>
-                            <button onClick={handleBookNow} className="btn btn-success btn-book">
-                                📅 Book This Trip
+                            <button onClick={handleBookNow} className="btn btn-success btn-book flex items-center justify-center gap-2">
+                                <Calendar size={18} /> Book This Trip
                             </button>
                             <p className="disclaimer">
                                 {categoryId

@@ -60,6 +60,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/partners/{id}', [PartnerManagementController::class, 'show']);
         Route::put('/partners/{id}', [PartnerManagementController::class, 'updatePartner']);
         Route::delete('/partners/{id}', [PartnerManagementController::class, 'deletePartner']);
+        Route::post('/partners/{id}/upload-avatar', [PartnerManagementController::class, 'uploadAvatar']);
         Route::post('/partners/{id}/approve', [PartnerManagementController::class, 'approvePartner']);
         
         // Vehicle Management
@@ -67,6 +68,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/vehicles/{id}/approve', [PartnerManagementController::class, 'approveVehicle']);
         Route::put('/vehicles/{id}', [PartnerManagementController::class, 'updateVehicle']);
         Route::delete('/vehicles/{id}', [PartnerManagementController::class, 'deleteVehicle']);
+        Route::post('/vehicles/{id}/upload-images', [PartnerManagementController::class, 'uploadVehicleImages']);
         
         // Booking Management
         Route::get('/bookings', [PartnerManagementController::class, 'getBookings']);

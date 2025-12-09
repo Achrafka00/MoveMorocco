@@ -2,9 +2,44 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 
+import {
+    LayoutDashboard,
+    Users,
+    Car,
+    Calendar,
+    Clock,
+    CheckCircle,
+    XCircle,
+    AlertCircle,
+    Edit,
+    Trash2,
+    Upload,
+    Search,
+    RefreshCw,
+    DollarSign,
+    TrendingUp,
+    MapPin,
+    Phone,
+    Mail,
+    Briefcase,
+    Settings,
+    MessageSquare,
+    Image as ImageIcon,
+    Trophy
+} from 'lucide-react';
+
 const Admin = () => {
     const { token } = useAuth();
     const toast = useToast();
+
+    // Helper to construct full image URL
+    const getImageUrl = (path) => {
+        if (!path) return null;
+        if (path.startsWith('http')) return path;
+        // Remove 'public/' if present in the path from storage link mismatch
+        const cleanPath = path.replace('public/', '');
+        return `http://127.0.0.1:8000${cleanPath.startsWith('/') ? '' : '/'}${cleanPath}`;
+    };
 
     const [stats, setStats] = useState({
         monthly_revenue: 0,
@@ -35,6 +70,10 @@ const Admin = () => {
     // Creative Alert State
     const [showDeleteAlert, setShowDeleteAlert] = useState(false);
     const [deleteTarget, setDeleteTarget] = useState(null);
+
+    // Vehicle Edit State
+    const [showVehicleEditModal, setShowVehicleEditModal] = useState(false);
+    const [selectedVehicle, setSelectedVehicle] = useState(null);
 
     const [searchTerm, setSearchTerm] = useState('');
     const [loading, setLoading] = useState(true);
@@ -346,6 +385,82 @@ const Admin = () => {
         }
     };
 
+    // --- Vehicle Management Handlers ---
+    const handleEditVehicle = (vehicle) => {
+        setSelectedVehicle({ ...vehicle });
+        setShowVehicleEditModal(true);
+    };
+
+    const handleUpdateVehicle = async (e) => {
+        e.preventDefault();
+        try {
+            const response = await fetch(`http://127.0.0.1:8000/api/admin/vehicles/${selectedVehicle.id}`, {
+                method: 'PUT',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify(selectedVehicle)
+            });
+
+            if (response.ok) {
+                toast.success('Vehicle updated successfully');
+                setShowVehicleEditModal(false);
+                fetchVehicles();
+            } else {
+                toast.error('Failed to update vehicle');
+            }
+        } catch (error) {
+            toast.error('Network error');
+        }
+    };
+
+    const handleVehicleImageUpload = async (e, vehicleId) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        if (file.size > 5 * 1024 * 1024) { // 5MB limit
+            toast.error('File size exceeds 5MB limit');
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('image', file);
+
+        const toastId = toast.loading('Uploading vehicle image...');
+
+        try {
+            const response = await fetch(`http://127.0.0.1:8000/api/admin/vehicles/${vehicleId}/upload-images`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Accept': 'application/json'
+                },
+                body: formData
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                toast.dismiss(toastId);
+                toast.success('Vehicle image uploaded!');
+
+                // Update local state
+                setSelectedVehicle(prev => ({ ...prev, image_url: data.image_url }));
+                setVehicles(prev => prev.map(v =>
+                    v.id === vehicleId ? { ...v, image_url: data.image_url } : v
+                ));
+            } else {
+                toast.dismiss(toastId);
+                toast.error(data.message || 'Upload failed');
+            }
+        } catch (error) {
+            toast.dismiss(toastId);
+            toast.error('Network error during upload');
+        }
+    };
+
 
     const filteredPartners = partners.filter(p =>
         p.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -364,18 +479,24 @@ const Admin = () => {
             <div className="container">
                 <div className="dashboard-header">
                     <div>
-                        <h1>⚙️ Admin Dashboard</h1>
-                        <p>Comprehensive system overview and management</p>
+                        <h1 className="flex items-center gap-3">
+                            <LayoutDashboard size={32} className="text-primary-600" />
+                            Admin Dashboard
+                        </h1>
+                        <p className="flex items-center gap-2 mt-2">
+                            <Settings size={16} />
+                            Comprehensive system overview and management
+                        </p>
                     </div>
-                    <button onClick={() => fetchAllData()} className="btn btn-outline">
-                        🔄 Refresh
+                    <button onClick={() => fetchAllData()} className="btn btn-outline flex items-center gap-2">
+                        <RefreshCw size={16} /> Refresh
                     </button>
                 </div>
 
                 {/* Commission Tracker Section */}
                 <div className="commission-tracker">
                     <div className="section-header-flex">
-                        <h2>💰 Commission Tracker ({viewMode === 'year' ? 'This Year' : 'This Month'})</h2>
+                        <h2><DollarSign className="inline-icon" size={24} /> Commission Tracker ({viewMode === 'year' ? 'This Year' : 'This Month'})</h2>
                         <div className="toggle-group">
                             <button
                                 className={`toggle-btn ${viewMode === 'month' ? 'active' : ''}`}
@@ -394,7 +515,7 @@ const Admin = () => {
 
                     <div className="stats-grid">
                         <div className="stat-card primary">
-                            <div className="stat-icon">💵</div>
+                            <div className="stat-icon"><DollarSign size={40} /></div>
                             <div className="stat-content">
                                 <h3>Total Revenue</h3>
                                 <p className="stat-number">{stats.monthly_revenue.toLocaleString('en-US', { minimumFractionDigits: 2 })} MAD</p>
@@ -402,7 +523,7 @@ const Admin = () => {
                             </div>
                         </div>
                         <div className="stat-card success">
-                            <div className="stat-icon">📈</div>
+                            <div className="stat-icon"><TrendingUp size={40} /></div>
                             <div className="stat-content">
                                 <h3>Commission Earned</h3>
                                 <p className="stat-number">{stats.monthly_commission.toLocaleString('en-US', { minimumFractionDigits: 2 })} MAD</p>
@@ -410,7 +531,7 @@ const Admin = () => {
                             </div>
                         </div>
                         <div className="stat-card warning">
-                            <div className="stat-icon">⏳</div>
+                            <div className="stat-icon"><Clock size={40} /></div>
                             <div className="stat-content">
                                 <h3>Unpaid Commissions</h3>
                                 <p className="stat-number">{stats.unpaid_commissions.toLocaleString('en-US', { minimumFractionDigits: 2 })} MAD</p>
@@ -418,7 +539,7 @@ const Admin = () => {
                             </div>
                         </div>
                         <div className="stat-card info">
-                            <div className="stat-icon">🏆</div>
+                            <div className="stat-icon"><Trophy size={40} /></div>
                             <div className="stat-content">
                                 <h3>Top Partner</h3>
                                 <p className="stat-name">
@@ -433,19 +554,19 @@ const Admin = () => {
                 {/* Quick Stats */}
                 <div className="quick-stats">
                     <div className="stat-item">
-                        <span className="stat-label">📊 Total Bookings</span>
+                        <span className="stat-label flex items-center gap-2"><Calendar size={18} /> Total Bookings</span>
                         <span className="stat-value">{stats.total_bookings}</span>
                     </div>
                     <div className="stat-item">
-                        <span className="stat-label">🚗 Total Vehicles</span>
+                        <span className="stat-label flex items-center gap-2"><Car size={18} /> Total Vehicles</span>
                         <span className="stat-value">{stats.total_vehicles}</span>
                     </div>
                     <div className="stat-item">
-                        <span className="stat-label">👥 Total Partners</span>
+                        <span className="stat-label flex items-center gap-2"><Users size={18} /> Total Partners</span>
                         <span className="stat-value">{stats.total_partners}</span>
                     </div>
                     <div className="stat-item highlight">
-                        <span className="stat-label">⚠️ Pending Approvals</span>
+                        <span className="stat-label flex items-center gap-2"><AlertCircle size={18} className="text-warning-600" /> Pending Approvals</span>
                         <span className="stat-value">{stats.pending_partners + stats.pending_vehicles}</span>
                     </div>
                 </div>
@@ -456,25 +577,31 @@ const Admin = () => {
                         className={activeTab === 'overview' ? 'active' : ''}
                         onClick={() => setActiveTab('overview')}
                     >
-                        📊 Overview
+                        <LayoutDashboard size={16} /> Overview
                     </button>
                     <button
                         className={activeTab === 'partners' ? 'active' : ''}
                         onClick={() => setActiveTab('partners')}
                     >
-                        👥 Partners ({partners.length})
+                        <Users size={16} /> Partners ({partners.length})
                     </button>
                     <button
                         className={activeTab === 'bookings' ? 'active' : ''}
                         onClick={() => setActiveTab('bookings')}
                     >
-                        📅 Bookings ({stats.total_bookings})
+                        <Calendar size={16} /> Bookings ({stats.total_bookings})
+                    </button>
+                    <button
+                        className={activeTab === 'vehicles' ? 'active' : ''}
+                        onClick={() => setActiveTab('vehicles')}
+                    >
+                        <Car size={16} /> Vehicles ({vehicles.length})
                     </button>
                     <button
                         className={activeTab === 'approvals' ? 'active' : ''}
                         onClick={() => setActiveTab('approvals')}
                     >
-                        ⏳ Pending Approvals ({pendingVehicles.length + pendingPartners.length})
+                        <Clock size={16} /> Pending Approvals ({pendingVehicles.length + pendingPartners.length})
                     </button>
                 </div>
 
@@ -527,7 +654,7 @@ const Admin = () => {
                                 <h2>Partner Management</h2>
                                 <input
                                     type="search"
-                                    placeholder="🔍 Search partners..."
+                                    placeholder="Search partners..."
                                     value={searchTerm}
                                     onChange={(e) => setSearchTerm(e.target.value)}
                                     className="search-input"
@@ -566,13 +693,13 @@ const Admin = () => {
                                                 <td>{partner.vehicles?.length || 0}</td>
                                                 <td>
                                                     {partner.is_approved ? (
-                                                        <span className="status status-approved">✓ Approved</span>
+                                                        <span className="status status-approved flex items-center gap-1"><CheckCircle size={14} /> Approved</span>
                                                     ) : (
                                                         <button
                                                             onClick={() => handleApprovePartner(partner.id)}
                                                             className="btn-mini btn-success"
                                                         >
-                                                            ✓ Approve
+                                                            <CheckCircle size={14} /> Approve
                                                         </button>
                                                     )}
                                                 </td>
@@ -654,10 +781,10 @@ const Admin = () => {
                                                         onChange={(e) => handleUpdateBookingStatus(booking.id, e.target.value)}
                                                         className="status-select"
                                                     >
-                                                        <option value="pending">⏳ Pending</option>
-                                                        <option value="confirmed">✅ Confirmed</option>
-                                                        <option value="completed">🎉 Completed</option>
-                                                        <option value="cancelled">❌ Cancelled</option>
+                                                        <option value="pending">Pending</option>
+                                                        <option value="confirmed">Confirmed</option>
+                                                        <option value="completed">Completed</option>
+                                                        <option value="cancelled">Cancelled</option>
                                                     </select>
                                                 </td>
                                                 <td>
@@ -667,7 +794,7 @@ const Admin = () => {
                                                                 className="btn-icon"
                                                                 title={booking.message}
                                                             >
-                                                                💬
+                                                                <MessageSquare size={16} />
                                                             </button>
                                                         )}
                                                         <button
@@ -697,12 +824,57 @@ const Admin = () => {
                         </div>
                     )}
 
+                    {activeTab === 'vehicles' && (
+                        <div className="vehicles-section">
+                            <div className="section-header">
+                                <h2>Vehicle Fleet Management</h2>
+                                <input
+                                    type="search"
+                                    placeholder="Search vehicles..."
+                                    className="search-input"
+                                />
+                            </div>
+                            <div className="vehicle-grid">
+                                {vehicles.map(vehicle => (
+                                    <div key={vehicle.id} className="vehicle-approval-card">
+                                        <div className="vehicle-image-wrapper">
+                                            {vehicle.image_url ? (
+                                                <img src={getImageUrl(vehicle.image_url)} alt={vehicle.name} />
+                                            ) : (
+                                                <div className="vehicle-placeholder">No Image</div>
+                                            )}
+                                        </div>
+                                        <div className="vehicle-info">
+                                            <h3>{vehicle.name} <span className="badge">{vehicle.category?.name}</span></h3>
+                                            <p>{vehicle.model} ({vehicle.year})</p>
+                                            <p><strong>Partner:</strong> {vehicle.partner?.name || 'Unknown'}</p>
+                                            <p><strong>Price:</strong> {vehicle.price_per_km} MAD/km</p>
+                                            <div className="status-row">
+                                                {vehicle.is_approved ? (
+                                                    <span className="status status-approved">Approved</span>
+                                                ) : (
+                                                    <span className="status status-pending">Pending</span>
+                                                )}
+                                            </div>
+                                        </div>
+                                        <button
+                                            onClick={() => handleEditVehicle(vehicle)}
+                                            className="btn btn-primary full-width"
+                                        >
+                                            <Edit size={16} /> Edit & Upload Image
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
                     {activeTab === 'approvals' && (
                         <div className="approvals-section">
                             {/* Pending Partners */}
                             {pendingPartners.length > 0 && (
                                 <>
-                                    <h2>👥 Pending Partner Approvals ({pendingPartners.length})</h2>
+                                    <h2><Users size={24} className="inline-icon" /> Pending Partner Approvals ({pendingPartners.length})</h2>
                                     <div className="partner-grid">
                                         {pendingPartners.map(partner => (
                                             <div key={partner.id} className="approval-card">
@@ -720,7 +892,7 @@ const Admin = () => {
                                                     onClick={() => handleApprovePartner(partner.id)}
                                                     className="btn btn-success full-width"
                                                 >
-                                                    ✓ Approve Partner
+                                                    <CheckCircle size={16} /> Approve Partner
                                                 </button>
                                             </div>
                                         ))}
@@ -731,11 +903,11 @@ const Admin = () => {
                             {/* Pending Vehicles */}
                             {pendingVehicles.length > 0 && (
                                 <>
-                                    <h2 style={{ marginTop: '2rem' }}>🚗 Pending Vehicle Approvals ({pendingVehicles.length})</h2>
+                                    <h2 style={{ marginTop: '2rem' }}><Car size={24} className="inline-icon" /> Pending Vehicle Approvals ({pendingVehicles.length})</h2>
                                     <div className="vehicle-grid">
                                         {pendingVehicles.map(vehicle => (
                                             <div key={vehicle.id} className="vehicle-approval-card">
-                                                <img src={vehicle.image_url} alt={vehicle.name} />
+                                                <img src={getImageUrl(vehicle.image_url)} alt={vehicle.name} />
                                                 <div className="vehicle-info">
                                                     <h3>{vehicle.name}</h3>
                                                     <p>{vehicle.model} ({vehicle.year})</p>
@@ -748,7 +920,7 @@ const Admin = () => {
                                                     onClick={() => handleApproveVehicle(vehicle.id)}
                                                     className="btn btn-primary full-width"
                                                 >
-                                                    ✓ Approve Vehicle
+                                                    <CheckCircle size={16} /> Approve Vehicle
                                                 </button>
                                             </div>
                                         ))}
@@ -758,7 +930,7 @@ const Admin = () => {
 
                             {pendingVehicles.length === 0 && pendingPartners.length === 0 && (
                                 <div className="empty-state-large">
-                                    <div className="empty-icon">✅</div>
+                                    <div className="empty-icon"><CheckCircle size={64} className="text-success-500" /></div>
                                     <h3>All Caught Up!</h3>
                                     <p>No pending approvals at the moment</p>
                                 </div>
@@ -772,7 +944,7 @@ const Admin = () => {
             {showEditModal && selectedPartner && (
                 <div className="modal-overlay" onClick={() => setShowEditModal(false)}>
                     <div className="modal expanded-modal" onClick={(e) => e.stopPropagation()}>
-                        <h2>✏️ Edit Partner</h2>
+                        <h2><Edit size={24} className="inline-icon" /> Edit Partner</h2>
                         <form onSubmit={handleUpdatePartner} className="partner-form">
                             <div className="partner-form-layout">
                                 {/* Left Column: Avatar */}
@@ -780,7 +952,7 @@ const Admin = () => {
                                     <div className="avatar-wrapper">
                                         <div className="avatar-placeholder large">
                                             {selectedPartner.avatar_url ? (
-                                                <img src={selectedPartner.avatar_url} alt={selectedPartner.name} />
+                                                <img src={getImageUrl(selectedPartner.avatar_url)} alt={selectedPartner.name} />
                                             ) : (
                                                 <span>{selectedPartner.name?.charAt(0)}</span>
                                             )}
@@ -791,7 +963,7 @@ const Admin = () => {
                                                     hidden
                                                     onChange={(e) => handleAdminFileUpload(e, selectedPartner.id)}
                                                 />
-                                                <span className="camera-icon">📷</span>
+                                                <span className="camera-icon"><Upload size={20} /></span>
                                             </label>
                                         </div>
                                     </div>
@@ -858,7 +1030,99 @@ const Admin = () => {
                                     Cancel
                                 </button>
                                 <button type="submit" className="btn btn-primary">
-                                    💾 Save Changes
+                                    <CheckCircle size={16} /> Save Changes
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Edit Vehicle Modal */}
+            {showVehicleEditModal && selectedVehicle && (
+                <div className="modal-overlay" onClick={() => setShowVehicleEditModal(false)}>
+                    <div className="modal expanded-modal" onClick={(e) => e.stopPropagation()}>
+                        <h2><Edit size={24} className="inline-icon" /> Edit Vehicle</h2>
+                        <form onSubmit={handleUpdateVehicle} className="partner-form">
+                            <div className="partner-form-layout">
+                                {/* Left Column: Image */}
+                                <div className="partner-avatar-section">
+                                    <div className="vehicle-image-preview">
+                                        {selectedVehicle.image_url ? (
+                                            <img src={getImageUrl(selectedVehicle.image_url)} alt={selectedVehicle.name} />
+                                        ) : (
+                                            <div className="vehicle-placeholder-box"><Car size={48} className="text-gray-300" /></div>
+                                        )}
+                                        <label className="avatar-upload-overlay">
+                                            <input
+                                                type="file"
+                                                accept="image/jpeg,image/png,image/jpg"
+                                                hidden
+                                                onChange={(e) => handleVehicleImageUpload(e, selectedVehicle.id)}
+                                            />
+                                            <span className="camera-icon flex items-center gap-2"><Upload size={16} /> Upload</span>
+                                        </label>
+                                    </div>
+                                    <p className="avatar-hint">Click to upload vehicle photo</p>
+                                </div>
+
+                                {/* Right Column: Details */}
+                                <div className="partner-details-section">
+                                    <div className="form-group">
+                                        <label>Vehicle Name</label>
+                                        <input
+                                            type="text"
+                                            value={selectedVehicle.name || ''}
+                                            onChange={(e) => setSelectedVehicle({ ...selectedVehicle, name: e.target.value })}
+                                            required
+                                        />
+                                    </div>
+                                    <div className="form-group">
+                                        <label>Model</label>
+                                        <input
+                                            type="text"
+                                            value={selectedVehicle.model || ''}
+                                            onChange={(e) => setSelectedVehicle({ ...selectedVehicle, model: e.target.value })}
+                                            required
+                                        />
+                                    </div>
+                                    <div className="form-group">
+                                        <label>Year</label>
+                                        <input
+                                            type="number"
+                                            value={selectedVehicle.year || ''}
+                                            onChange={(e) => setSelectedVehicle({ ...selectedVehicle, year: e.target.value })}
+                                            required
+                                        />
+                                    </div>
+                                    <div className="form-group">
+                                        <label>Price per KM (MAD)</label>
+                                        <input
+                                            type="number"
+                                            value={selectedVehicle.price_per_km || ''}
+                                            onChange={(e) => setSelectedVehicle({ ...selectedVehicle, price_per_km: e.target.value })}
+                                            step="0.01"
+                                            required
+                                        />
+                                    </div>
+                                    <div className="form-group checkbox-group">
+                                        <label>
+                                            <input
+                                                type="checkbox"
+                                                checked={selectedVehicle.is_approved || false}
+                                                onChange={(e) => setSelectedVehicle({ ...selectedVehicle, is_approved: e.target.checked })}
+                                            />
+                                            {' '}Approved
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="modal-actions">
+                                <button type="button" onClick={() => setShowVehicleEditModal(false)} className="btn btn-secondary">
+                                    Cancel
+                                </button>
+                                <button type="submit" className="btn btn-primary">
+                                    <CheckCircle size={16} /> Save Changes
                                 </button>
                             </div>
                         </form>
@@ -870,7 +1134,7 @@ const Admin = () => {
             {showBookingEditModal && selectedBooking && (
                 <div className="modal-overlay" onClick={() => setShowBookingEditModal(false)}>
                     <div className="modal" onClick={(e) => e.stopPropagation()}>
-                        <h2>✏️ Edit Booking #{selectedBooking.id}</h2>
+                        <h2><Edit size={24} className="inline-icon" /> Edit Booking #{selectedBooking.id}</h2>
                         <form onSubmit={handleUpdateBooking}>
                             <div className="form-row">
                                 <div className="form-group">
@@ -972,7 +1236,7 @@ const Admin = () => {
                                     Cancel
                                 </button>
                                 <button type="submit" className="btn btn-primary">
-                                    💾 Save Changes
+                                    <CheckCircle size={16} /> Save Changes
                                 </button>
                             </div>
                         </form>
@@ -985,7 +1249,7 @@ const Admin = () => {
                 <div className="modal-overlay alert-overlay" onClick={() => setShowDeleteAlert(false)}>
                     <div className="creative-alert" onClick={(e) => e.stopPropagation()}>
                         <div className="alert-icon-wrapper">
-                            <div className="alert-icon">🗑️</div>
+                            <div className="alert-icon"><AlertCircle size={48} className="text-danger-600" /></div>
                         </div>
                         <h3>Are you absolutely sure?</h3>
                         <p>
@@ -1384,7 +1648,40 @@ const Admin = () => {
                     grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
                     gap: 1.5rem;
                 }
-
+                .vehicle-image-preview {
+                    width: 100%;
+                    height: 150px;
+                    border-radius: var(--radius-md);
+                    overflow: hidden;
+                    position: relative;
+                    border: 2px solid #e2e8f0;
+                    margin-bottom: 0.5rem;
+                }
+                .vehicle-image-preview img {
+                    width: 100%;
+                    height: 100%;
+                    object-fit: cover;
+                }
+                .vehicle-placeholder-box {
+                    width: 100%;
+                    height: 100%;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    background: #f1f5f9;
+                    font-size: 3rem;
+                }
+                .vehicle-placeholder {
+                    width: 100%;
+                    height: 160px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    background: #f1f5f9;
+                    color: var(--color-text-muted);
+                    border-radius: var(--radius-md);
+                    margin-bottom: 1rem;
+                }
                 .card-header {
                     display: flex;
                     justify-content: space-between;

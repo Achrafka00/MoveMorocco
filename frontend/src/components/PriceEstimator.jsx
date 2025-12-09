@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { DollarSign, CheckCircle } from 'lucide-react';
 
 const PriceEstimator = () => {
     const [cities, setCities] = useState([]);
@@ -71,7 +72,7 @@ const PriceEstimator = () => {
 
     return (
         <div className="price-estimator">
-            <h2 className="text-center mb-4">💰 Get Instant Price Estimate</h2>
+            <h2 className="text-center mb-4 flex items-center justify-center gap-2"><DollarSign size={28} /> Get Instant Price Estimate</h2>
             <p className="text-center mb-8" style={{ color: 'var(--color-text-muted)' }}>
                 Calculate your trip cost in seconds
             </p>
@@ -134,7 +135,7 @@ const PriceEstimator = () => {
             {estimate && (
                 <div className="estimate-result">
                     <div className="result-header">
-                        <h3>✅ Estimated Price</h3>
+                        <h3 className="flex items-center gap-2"><CheckCircle size={20} /> Estimated Price</h3>
                         <p className="route">{estimate.route}</p>
                     </div>
                     <div className="result-details">

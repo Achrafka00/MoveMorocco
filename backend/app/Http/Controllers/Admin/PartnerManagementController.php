@@ -188,8 +188,8 @@ class PartnerManagementController extends Controller
                 Storage::delete($oldPath);
             }
 
-            // Store new avatar
-            $path = $request->file('avatar')->store('public/avatars');
+            // Store new avatar using public disk
+            $path = $request->file('avatar')->store('partners/avatars', 'public');
             $url = Storage::url($path);
             
             // Fix double slash issue if present
@@ -277,6 +277,34 @@ class PartnerManagementController extends Controller
         $vehicle->delete();
 
         return response()->json(['message' => 'Vehicle deleted successfully']);
+    }
+
+    public function uploadVehicleImages(Request $request, $id)
+    {
+        $request->validate([
+            'image' => 'required|image|mimes:jpeg,jpg,png,webp|max:5120',
+        ]);
+
+        $vehicle = Vehicle::findOrFail($id);
+
+        $path = $request->file('image')->store('vehicles', 'public');
+        $url = Storage::url($path);
+        
+        // Fix double slash issue if present
+        $url = str_replace('/storage//', '/storage/', $url);
+
+        // Update image_url (main image)
+        $vehicle->update(['image_url' => $url]);
+        
+        // Update images array (append)
+        $images = $vehicle->images ?? [];
+        $images[] = $url;
+        $vehicle->update(['images' => $images]);
+
+        return response()->json([
+            'message' => 'Vehicle image uploaded successfully',
+            'image_url' => $url
+        ]);
     }
     
     // Get all bookings
