@@ -71,6 +71,8 @@ Route::middleware('auth:sanctum')->group(function () {
         // Booking Management
         Route::get('/bookings', [PartnerManagementController::class, 'getBookings']);
         Route::put('/bookings/{id}/status', [PartnerManagementController::class, 'updateBookingStatus']);
+        Route::put('/bookings/{id}', [PartnerManagementController::class, 'updateBooking']);
+        Route::delete('/bookings/{id}', [PartnerManagementController::class, 'deleteBooking']);
     });
 });
 

@@ -9,33 +9,40 @@ use App\Models\User;
 use App\Models\Booking;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Storage;
 
 class PartnerManagementController extends Controller
 {
     // Get admin dashboard statistics
-    public function getStats()
+    public function getStats(Request $request)
     {
-        $currentMonth = Carbon::now()->startOfMonth();
+        // Determine date range based on 'period' parameter
+        $period = $request->input('period', 'month');
+        $startDate = $period === 'year' 
+            ? Carbon::now()->startOfYear() 
+            : Carbon::now()->startOfMonth();
         
-        // Get all bookings
-        $bookings = Booking::all();
-        $monthlyBookings = Booking::where('created_at', '>=', $currentMonth)->get();
+        // Get all bookings (total count)
+        $totalBookingsCount = Booking::count();
         
-        // Calculate commissions (10% of booking price)
-        $totalRevenue = $monthlyBookings->sum('price') ?? 0;
-        $commission = $totalRevenue * 0.10;
+        // Optimize: Use DB aggregates instead of fetching all records
+        $periodQuery = Booking::where('created_at', '>=', $startDate);
         
-        // Get unpaid commissions
-        $unpaidCommissions = Booking::where('commission_paid', false)
-            ->sum('price') * 0.10;
+        // Clone query for different aggregates to avoid query builder state issues
+        $periodRevenue = (clone $periodQuery)->sum('price') ?? 0;
+        $periodBookingsCount = (clone $periodQuery)->count();
+        $periodCommission = $periodRevenue * 0.10;
         
-        // Get top partner (partner with most vehicles for now)
+        // Get unpaid commissions (Total outstanding)
+        $unpaidCommissions = Booking::where('commission_paid', false)->sum('price') * 0.10;
+        
+        // Get top partner (simplified: Most vehicles)
         $topPartner = Partner::withCount('vehicles')
             ->where('is_approved', true)
             ->orderBy('vehicles_count', 'desc')
             ->first();
         
-        // Recent bookings
+        // Recent bookings (Limit to 10)
         $recentBookings = Booking::orderBy('created_at', 'desc')->take(10)->get();
         
         // Pending approvals
@@ -43,11 +50,11 @@ class PartnerManagementController extends Controller
         $pendingVehicles = Vehicle::where('is_approved', false)->count();
         
         return response()->json([
-            'monthly_revenue' => round($totalRevenue, 2),
-            'monthly_commission' => round($commission, 2),
+            'monthly_revenue' => round($periodRevenue, 2),
+            'monthly_commission' => round($periodCommission, 2),
             'unpaid_commissions' => round($unpaidCommissions, 2),
-            'total_rides' => $monthlyBookings->count(),
-            'total_bookings' => $bookings->count(),
+            'total_rides' => $periodBookingsCount,
+            'total_bookings' => $totalBookingsCount,
             'total_partners' => Partner::count(),
             'total_vehicles' => Vehicle::count(),
             'pending_partners' => $pendingPartners,
@@ -74,7 +81,8 @@ class PartnerManagementController extends Controller
             }
         }
 
-        $partners = $query->orderBy('created_at', 'desc')->get();
+        // Limit results to prevent slow response
+        $partners = $query->orderBy('created_at', 'desc')->take(50)->get();
 
         return response()->json($partners);
     }
@@ -137,12 +145,12 @@ class PartnerManagementController extends Controller
             }
         }
 
-        $vehicles = $query->orderBy('created_at', 'desc')->get();
+        // Limit results
+        $vehicles = $query->orderBy('created_at', 'desc')->take(50)->get();
 
         return response()->json($vehicles);
     }
 
-    // Update partner
     public function updatePartner(Request $request, $id)
     {
         $partner = Partner::findOrFail($id);
@@ -163,6 +171,39 @@ class PartnerManagementController extends Controller
             'message' => 'Partner updated successfully',
             'partner' => $partner
         ]);
+    }
+
+    public function uploadAvatar(Request $request, $id)
+    {
+        $request->validate([
+            'avatar' => 'required|image|mimes:jpeg,png,jpg|max:1024',
+        ]);
+
+        $partner = Partner::findOrFail($id);
+
+        if ($request->hasFile('avatar')) {
+            // Delete old avatar if exists
+            if ($partner->avatar_url) {
+                $oldPath = str_replace('/storage/', 'public/', $partner->avatar_url);
+                Storage::delete($oldPath);
+            }
+
+            // Store new avatar
+            $path = $request->file('avatar')->store('public/avatars');
+            $url = Storage::url($path);
+            
+            // Fix double slash issue if present
+            $url = str_replace('/storage//', '/storage/', $url);
+
+            $partner->update(['avatar_url' => $url]);
+
+            return response()->json([
+                'message' => 'Avatar uploaded successfully',
+                'avatar_url' => $url
+            ]);
+        }
+
+        return response()->json(['message' => 'No file uploaded'], 400);
     }
 
     public function deletePartner($id)
@@ -247,7 +288,8 @@ class PartnerManagementController extends Controller
             $query->where('status', $request->status);
         }
         
-        $bookings = $query->get();
+        // Limit results
+        $bookings = $query->take(50)->get();
         return response()->json($bookings);
     }
     
@@ -265,6 +307,43 @@ class PartnerManagementController extends Controller
         return response()->json([
             'message' => 'Booking status updated successfully',
             'booking' => $booking
+        ]);
+    }
+
+    // Update full booking details
+    public function updateBooking(Request $request, $id)
+    {
+        $booking = Booking::findOrFail($id);
+
+        $validated = $request->validate([
+            'name' => 'sometimes|string|max:255',
+            'email' => 'sometimes|email|max:255',
+            'phone' => 'sometimes|string|max:20',
+            'pickup' => 'sometimes|string|max:255',
+            'dropoff' => 'sometimes|string|max:255',
+            'date' => 'sometimes|date',
+            'time' => 'sometimes|date_format:H:i',
+            'passengers' => 'sometimes|integer|min:1',
+            'price' => 'sometimes|numeric|min:0',
+            'status' => 'sometimes|in:pending,confirmed,completed,cancelled',
+        ]);
+
+        $booking->update($validated);
+
+        return response()->json([
+            'message' => 'Booking updated successfully',
+            'booking' => $booking
+        ]);
+    }
+
+    // Delete booking
+    public function deleteBooking($id)
+    {
+        $booking = Booking::findOrFail($id);
+        $booking->delete();
+
+        return response()->json([
+            'message' => 'Booking deleted successfully'
         ]);
     }
 }

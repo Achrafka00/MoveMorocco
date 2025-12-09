@@ -2,6 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { ToastProvider } from './context/ToastContext';
+import GlobalLoader from './components/GlobalLoader';
 import ProtectedRoute from './components/ProtectedRoute';
 import Navbar from './components/Navbar';
 import Home from './pages/Home';
@@ -16,6 +17,7 @@ function App() {
   return (
     <AuthProvider>
       <ToastProvider>
+        <GlobalLoader />
         <Router>
           <div className="app">
             <Navbar />

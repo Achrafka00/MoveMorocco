@@ -1,16 +1,61 @@
-# React + Vite
+<div align="center">
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+# 🌍 MoveMorocco  
+### *All-in-one travel mediation platform for Morocco*  
 
-Currently, two official plugins are available:
+<p align="center">
+  <img src="https://img.shields.io/badge/React.js-20232A?style=for-the-badge&logo=react&logoColor=61DAFB" />
+  <img src="https://img.shields.io/badge/Laravel-FF2D20?style=for-the-badge&logo=laravel&logoColor=white" />
+  <img src="https://img.shields.io/badge/MySQL-005C84?style=for-the-badge&logo=mysql&logoColor=white" />
+  <img src="https://img.shields.io/badge/Status-In%20Development-blueviolet?style=for-the-badge" />
+</p>
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+> MoveMorocco is a web platform that connects **travelers** with **trusted local transport services** through a simple and efficient interface.
 
-## React Compiler
+</div>
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+---
 
-## Expanding the ESLint configuration
+## 🚀 Features
+- 🧭 Quick and easy booking requests  
+- 📋 Admin dashboard for managing transport & partners  
+- 💬 Direct communication with clients  
+- 🔄 Booking status tracking  
+- 🔐 Secure & centralized data management  
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+---
+
+## 🧠 Tech Stack
+| Layer | Technology |
+|-------|-------------|
+| **Frontend** | Vite -TypeScript -React -shadcn-ui -Tailwind CSS |
+| **Backend** | Laravel API |
+| **Database** | MySQL |
+| **Hosting** | - |
+
+---
+
+## ⚙️ Installation
+
+```bash
+# 1️⃣ Clone the repository
+git clone https://github.com/username/movemorocco.git
+
+# 2️⃣ Install dependencies
+cd frontend && npm install
+cd ../backend && composer install
+
+# 3️⃣ Configure environment variables
+#   → /frontend/.env
+#   → /backend/.env
+
+# 4️⃣ Run the project
+npm start          # React frontend
+php artisan serve  # Laravel backend
+#Project Structure
+/frontend   → React app  
+/backend    → Laravel API  
+/database   → SQL scripts
+```
+---
+## features 

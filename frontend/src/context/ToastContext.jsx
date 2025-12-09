@@ -3,58 +3,69 @@ import React, { createContext, useContext, useState } from 'react';
 const ToastContext = createContext();
 
 export const useToast = () => {
-    const context = useContext(ToastContext);
-    if (!context) {
-        throw new Error('useToast must be used within ToastProvider');
-    }
-    return context;
+  const context = useContext(ToastContext);
+  if (!context) {
+    throw new Error('useToast must be used within ToastProvider');
+  }
+  return context;
 };
 
 export const ToastProvider = ({ children }) => {
-    const [toasts, setToasts] = useState([]);
+  const [toasts, setToasts] = useState([]);
 
-    const addToast = (message, type = 'info') => {
-        const id = Date.now();
-        setToasts(prev => [...prev, { id, message, type }]);
+  const addToast = (message, type = 'info', persist = false) => {
+    const id = Date.now() + Math.random(); // Ensure unique ID
+    setToasts(prev => [...prev, { id, message, type, persist }]);
 
-        // Auto remove after 5 seconds
-        setTimeout(() => {
-            removeToast(id);
-        }, 5000);
-    };
+    // Auto remove after 5 seconds if not persistent
+    if (!persist) {
+      setTimeout(() => {
+        removeToast(id);
+      }, 5000);
+    }
+    return id;
+  };
 
-    const removeToast = (id) => {
-        setToasts(prev => prev.filter(toast => toast.id !== id));
-    };
+  const removeToast = (id) => {
+    setToasts(prev => prev.filter(toast => toast.id !== id));
+  };
 
-    const success = (message) => addToast(message, 'success');
-    const error = (message) => addToast(message, 'error');
-    const warning = (message) => addToast(message, 'warning');
-    const info = (message) => addToast(message, 'info');
+  const success = (message) => addToast(message, 'success');
+  const error = (message) => addToast(message, 'error');
+  const warning = (message) => addToast(message, 'warning');
+  const info = (message) => addToast(message, 'info');
 
-    return (
-        <ToastContext.Provider value={{ success, error, warning, info }}>
-            {children}
-            <div className="toast-container">
-                {toasts.map(toast => (
-                    <div
-                        key={toast.id}
-                        className={`toast toast-${toast.type}`}
-                        onClick={() => removeToast(toast.id)}
-                    >
-                        <div className="toast-icon">
-                            {toast.type === 'success' && '✓'}
-                            {toast.type === 'error' && '✕'}
-                            {toast.type === 'warning' && '⚠'}
-                            {toast.type === 'info' && 'ⓘ'}
-                        </div>
-                        <div className="toast-message">{toast.message}</div>
-                        <button className="toast-close" onClick={() => removeToast(toast.id)}>×</button>
-                    </div>
-                ))}
+  // Loading toast: persistent until dismissed
+  const loading = (message = 'Loading...') => addToast(message, 'loading', true);
+  // Dismiss toast by ID (useful for loading)
+  const dismiss = (id) => removeToast(id);
+
+  return (
+    <ToastContext.Provider value={{ success, error, warning, info, loading, dismiss }}>
+      {children}
+      <div className="toast-container">
+        {toasts.map(toast => (
+          <div
+            key={toast.id}
+            className={`toast toast-${toast.type}`}
+            onClick={() => removeToast(toast.id)}
+          >
+            <div className="toast-icon">
+              {toast.type === 'success' && '✓'}
+              {toast.type === 'error' && '✕'}
+              {toast.type === 'warning' && '⚠'}
+              {toast.type === 'info' && 'ⓘ'}
+              {toast.type === 'loading' && <span className="spinner">↻</span>}
             </div>
+            <div className="toast-message">{toast.message}</div>
+            {(!toast.persist) && (
+              <button className="toast-close" onClick={() => removeToast(toast.id)}>×</button>
+            )}
+          </div>
+        ))}
+      </div>
 
-            <style>{`
+      <style>{`
         .toast-container {
           position: fixed;
           top: 5rem;
@@ -89,26 +100,25 @@ export const ToastProvider = ({ children }) => {
             opacity: 1;
           }
         }
+        
+        .spinner {
+            display: inline-block;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            100% { transform: rotate(360deg); }
+        }
 
         .toast:hover {
           box-shadow: 0 12px 48px rgba(0, 0, 0, 0.2);
         }
 
-        .toast-success {
-          border-left-color: #10b981;
-        }
-
-        .toast-error {
-          border-left-color: #ef4444;
-        }
-
-        .toast-warning {
-          border-left-color: #f59e0b;
-        }
-
-        .toast-info {
-          border-left-color: #3b82f6;
-        }
+        .toast-success { border-left-color: #10b981; }
+        .toast-error { border-left-color: #ef4444; }
+        .toast-warning { border-left-color: #f59e0b; }
+        .toast-info { border-left-color: #3b82f6; }
+        .toast-loading { border-left-color: #8b5cf6; }
 
         .toast-icon {
           width: 24px;
@@ -122,25 +132,11 @@ export const ToastProvider = ({ children }) => {
           flex-shrink: 0;
         }
 
-        .toast-success .toast-icon {
-          background: #d1fae5;
-          color: #10b981;
-        }
-
-        .toast-error .toast-icon {
-          background: #fee2e2;
-          color: #ef4444;
-        }
-
-        .toast-warning .toast-icon {
-          background: #fef3c7;
-          color: #f59e0b;
-        }
-
-        .toast-info .toast-icon {
-          background: #dbeafe;
-          color: #3b82f6;
-        }
+        .toast-success .toast-icon { background: #d1fae5; color: #10b981; }
+        .toast-error .toast-icon { background: #fee2e2; color: #ef4444; }
+        .toast-warning .toast-icon { background: #fef3c7; color: #f59e0b; }
+        .toast-info .toast-icon { background: #dbeafe; color: #3b82f6; }
+        .toast-loading .toast-icon { background: #f3e8ff; color: #8b5cf6; }
 
         .toast-message {
           flex: 1;
@@ -175,6 +171,6 @@ export const ToastProvider = ({ children }) => {
           }
         }
       `}</style>
-        </ToastContext.Provider>
-    );
+    </ToastContext.Provider>
+  );
 };
