@@ -285,7 +285,11 @@ const Admin = () => {
     // --- Booking Management Handlers ---
 
     const handleEditBooking = (booking) => {
-        setSelectedBooking({ ...booking });
+        const formattedBooking = {
+            ...booking,
+            time: booking.time ? booking.time.substring(0, 5) : ''
+        };
+        setSelectedBooking(formattedBooking);
         setShowBookingEditModal(true);
     };
 
@@ -1325,9 +1329,46 @@ const Admin = () => {
 
                 .empty-state {
                     text-align: center;
-                    padding: 2rem;
+                    padding: 3rem;
                     color: var(--color-text-muted);
                     font-style: italic;
+                    background: #f8fafc;
+                    border-radius: var(--radius-md);
+                    margin-top: 1rem;
+                }
+
+                .table-container {
+                    overflow-x: auto;
+                    border: 1px solid #e2e8f0;
+                    border-radius: var(--radius-md);
+                    background: white;
+                }
+
+                table {
+                    width: 100%;
+                    border-collapse: separate; 
+                    border-spacing: 0;
+                }
+                
+                th {
+                    background-color: #f8fafc;
+                    font-weight: 600;
+                    color: #475569;
+                    padding: 1rem 1.5rem;
+                    border-bottom: 1px solid #e2e8f0;
+                    white-space: nowrap;
+                    text-align: left;
+                }
+                
+                td {
+                    padding: 1rem 1.5rem;
+                    border-bottom: 1px solid #f1f5f9;
+                    color: #1e293b;
+                    text-align: left;
+                }
+
+                tr:last-child td {
+                    border-bottom: none;
                 }
 
                 .approval-card, .vehicle-approval-card {
