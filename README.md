@@ -28,7 +28,7 @@
 ## 🧠 Tech Stack
 | Layer | Technology |
 |-------|-------------|
-| **Frontend** | Vite -TypeScript -React -shadcn-ui -Tailwind CSS |
+| **Frontend** | Vite - React - CSS |
 | **Backend** | Laravel API |
 | **Database** | MySQL |
 | **Hosting** | - |
